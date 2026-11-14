@@ -1,0 +1,46 @@
+# dependencies
+node_modules/
+/.pnp
+.pnp.*
+
+# next.js
+.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# local tooling caches (sandbox-safe)
+/.cache/
+/.dsh-acl-reports/
+/.pnpm-store/
+
+# misc
+.DS_Store
+*.pem
+*.tsbuildinfo
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (including example files)
+.env*
+
+# vercel
+.vercel
+
+# AI instructions, editor metadata, and project blueprints
+doc/
+**/doc/
+AGENTS.md
+**/AGENTS.md
+CLAUDE.md
+**/CLAUDE.md
+.cursor*
+**/.cursor*
+.opencode*
+**/.opencode*

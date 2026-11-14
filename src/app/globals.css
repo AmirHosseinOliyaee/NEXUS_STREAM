@@ -1,0 +1,516 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ *
+ * NEXUS STREAM — Cyber-HUD theme bridge
+ * Maps the raw CSS tokens into Tailwind v4 utilities.
+ * ------------------------------------------------------------------ */
+@theme inline {
+  --color-void: var(--bg-void);
+  --color-hud: var(--bg-hud);
+  --color-elevated: var(--bg-elevated);
+
+  --color-neon: var(--neon-primary);
+  --color-neon-secondary: var(--neon-secondary);
+  --color-neon-success: var(--neon-success);
+  --color-neon-warning: var(--neon-warning);
+  --color-neon-danger: var(--neon-danger);
+
+  --font-sans: var(--font-sans), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ------------------------------------------------------------------ *
+ * Design tokens — dark-first tactical palette
+ * ------------------------------------------------------------------ */
+@layer base {
+  :root {
+    --bg-void: #07080d;
+    --bg-hud: rgba(14, 17, 26, 0.78);
+    --bg-elevated: #131722;
+
+    --neon-primary: #00f0ff;
+    --neon-secondary: #bc13fe;
+    --neon-success: #00ff66;
+    --neon-warning: #ffb800;
+    --neon-danger: #ff0055;
+
+    --text-primary: #e7eef9;
+    --text-muted: rgba(231, 238, 249, 0.58);
+    --text-dim: rgba(231, 238, 249, 0.34);
+    --border-hud: rgba(255, 255, 255, 0.08);
+
+    --grid-step: 24px;
+  }
+
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+  }
+
+  body {
+    background-color: var(--bg-void);
+    color: var(--text-primary);
+    font-family: var(--font-sans), "Inter", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--neon-primary);
+    color: var(--bg-void);
+  }
+
+  :focus-visible {
+    outline: 1px solid color-mix(in srgb, var(--neon-primary) 85%, white);
+    outline-offset: 3px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-void);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid var(--bg-void);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-primary);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Tactical utilities
+ * ------------------------------------------------------------------ */
+@layer utilities {
+  .cyber-chamfer-sm {
+    clip-path: polygon(
+      0 0,
+      calc(100% - 8px) 0,
+      100% 8px,
+      100% 100%,
+      8px 100%,
+      0 calc(100% - 8px)
+    );
+  }
+
+  .cyber-chamfer-lg {
+    clip-path: polygon(
+      0 0,
+      calc(100% - 16px) 0,
+      100% 16px,
+      100% 100%,
+      16px 100%,
+      0 calc(100% - 16px)
+    );
+  }
+
+  .cyber-glass {
+    background: var(--bg-hud);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 18px -3px var(--neon-primary);
+    border-color: var(--neon-primary);
+  }
+
+  .bg-carbon-grid {
+    background-image:
+      linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0.035) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.035) 1px,
+        transparent 1px
+      ),
+      radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.16) 0.5px,
+        transparent 0.5px
+      );
+    background-size:
+      var(--grid-step) var(--grid-step),
+      var(--grid-step) var(--grid-step),
+      var(--grid-step) var(--grid-step);
+    background-position: center;
+  }
+
+  .bg-checker {
+    background-image:
+      linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.06) 25%,
+        transparent 25%,
+        transparent 75%,
+        rgba(255, 255, 255, 0.06) 75%
+      ),
+      linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.06) 25%,
+        transparent 25%,
+        transparent 75%,
+        rgba(255, 255, 255, 0.06) 75%
+      );
+    background-position:
+      0 0,
+      6px 6px;
+    background-size: 12px 12px;
+  }
+
+  .hud-scanlines {
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.04) 0px,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Component-level HUD styling (accent-aware, token driven)
+ * ------------------------------------------------------------------ */
+@layer components {
+  .cyber-card {
+    transition: filter 320ms ease;
+  }
+
+  .cyber-card[data-interactive="true"]:hover,
+  .cyber-card[data-interactive="true"]:focus-within {
+    filter: drop-shadow(
+      0 0 16px color-mix(in srgb, var(--card-accent) 34%, transparent)
+    );
+  }
+
+  .cyber-card[data-interactive="true"]:hover .cyber-card__bracket,
+  .cyber-card[data-interactive="true"]:focus-within .cyber-card__bracket {
+    opacity: 1;
+  }
+
+  .cyber-card__bracket {
+    opacity: 0.55;
+  }
+
+  .neon-button-shell {
+    transition: filter 240ms ease;
+  }
+
+  .neon-button-shell:hover,
+  .neon-button-shell:focus-within {
+    filter: drop-shadow(
+      0 0 12px color-mix(in srgb, var(--btn-accent) 48%, transparent)
+    );
+  }
+
+  .neon-button-shell:has(> button:disabled) {
+    filter: none;
+  }
+
+  .neon-button:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.92),
+      inset 0 0 0 3px rgba(7, 8, 13, 0.55);
+  }
+
+  /* Telemetry badge — tone driven via --badge-accent */
+  .hud-badge {
+    --badge-accent: var(--neon-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border: 1px solid
+      color-mix(in srgb, var(--badge-accent) 34%, transparent);
+    background: color-mix(in srgb, var(--badge-accent) 9%, transparent);
+    color: color-mix(in srgb, var(--badge-accent) 86%, white);
+    clip-path: polygon(
+      0 0,
+      calc(100% - 6px) 0,
+      100% 6px,
+      100% 100%,
+      0 100%
+    );
+  }
+
+  .hud-badge[data-tone="primary"] {
+    --badge-accent: var(--neon-primary);
+  }
+
+  .hud-badge[data-tone="secondary"] {
+    --badge-accent: var(--neon-secondary);
+  }
+
+  .hud-badge[data-tone="success"] {
+    --badge-accent: var(--neon-success);
+  }
+
+  .hud-badge[data-tone="warning"] {
+    --badge-accent: var(--neon-warning);
+  }
+
+  .hud-badge[data-tone="danger"] {
+    --badge-accent: var(--neon-danger);
+  }
+
+  .hud-badge[data-tone="neutral"] {
+    --badge-accent: rgba(231, 238, 249, 0.62);
+  }
+
+  .hud-badge[data-variant="solid"] {
+    background: var(--badge-accent);
+    border-color: transparent;
+    color: var(--bg-void);
+  }
+
+  .hud-badge[data-variant="solid"] .hud-dot,
+  .hud-badge[data-variant="solid"] .hud-dot-ping {
+    background: var(--bg-void);
+  }
+
+  .hud-badge[data-variant="outline"] {
+    background: transparent;
+  }
+
+  .hud-badge[data-variant="ghost"] {
+    border-color: color-mix(in srgb, var(--badge-accent) 18%, transparent);
+    background: rgba(255, 255, 255, 0.03);
+    color: color-mix(in srgb, var(--badge-accent) 68%, white);
+  }
+
+  /* DJ-style fader */
+  .hud-fader {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+  }
+
+  .hud-fader::-webkit-slider-runnable-track {
+    height: 100%;
+    background: transparent;
+  }
+
+  .hud-fader::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 22px;
+    margin-top: 0;
+    border: 1px solid
+      color-mix(in srgb, var(--fader-accent) 60%, white);
+    background: var(--fader-accent);
+    box-shadow: 0 0 14px
+      color-mix(in srgb, var(--fader-accent) 60%, transparent);
+    clip-path: polygon(
+      0 0,
+      calc(100% - 4px) 0,
+      100% 4px,
+      100% 100%,
+      4px 100%,
+      0 calc(100% - 4px)
+    );
+    transition: box-shadow 160ms ease;
+  }
+
+  .hud-fader::-moz-range-track {
+    height: 100%;
+    background: transparent;
+  }
+
+  .hud-fader::-moz-range-thumb {
+    width: 12px;
+    height: 22px;
+    border: 1px solid
+      color-mix(in srgb, var(--fader-accent) 60%, white);
+    border-radius: 0;
+    background: var(--fader-accent);
+    box-shadow: 0 0 14px
+      color-mix(in srgb, var(--fader-accent) 60%, transparent);
+  }
+
+  .hud-fader:focus-visible {
+    outline: none;
+  }
+
+  .hud-fader:focus-visible::-webkit-slider-thumb {
+    box-shadow:
+      0 0 0 2px var(--bg-void),
+      0 0 0 3px var(--fader-accent),
+      0 0 18px var(--fader-accent);
+  }
+
+  .hud-fader:focus-visible::-moz-range-thumb {
+    box-shadow:
+      0 0 0 2px var(--bg-void),
+      0 0 0 3px var(--fader-accent),
+      0 0 18px var(--fader-accent);
+  }
+
+  .hud-fader:disabled {
+    cursor: not-allowed;
+  }
+
+  .hud-fader:disabled::-webkit-slider-thumb {
+    background: rgba(231, 238, 249, 0.28);
+    border-color: rgba(231, 238, 249, 0.2);
+    box-shadow: none;
+  }
+
+  .hud-fader:disabled::-moz-range-thumb {
+    background: rgba(231, 238, 249, 0.28);
+    border-color: rgba(231, 238, 249, 0.2);
+    box-shadow: none;
+  }
+
+  /* Compact volume fader used inside the player control bar */
+  .volume-fader {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 14px;
+    width: 5rem;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .volume-fader::-webkit-slider-runnable-track {
+    height: 2px;
+    background: linear-gradient(
+      to right,
+      var(--neon-primary) 0%,
+      var(--neon-primary) var(--volume, 80%),
+      rgba(255, 255, 255, 0.18) var(--volume, 80%),
+      rgba(255, 255, 255, 0.18) 100%
+    );
+  }
+
+  .volume-fader::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 7px;
+    height: 12px;
+    margin-top: -5px;
+    background: var(--neon-primary);
+    box-shadow: 0 0 10px var(--neon-primary);
+    clip-path: polygon(
+      0 0,
+      calc(100% - 2px) 0,
+      100% 2px,
+      100% 100%,
+      2px 100%,
+      0 calc(100% - 2px)
+    );
+  }
+
+  .volume-fader::-moz-range-track {
+    height: 2px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .volume-fader::-moz-range-progress {
+    height: 2px;
+    background: var(--neon-primary);
+  }
+
+  .volume-fader::-moz-range-thumb {
+    width: 7px;
+    height: 12px;
+    border: 0;
+    border-radius: 0;
+    background: var(--neon-primary);
+    box-shadow: 0 0 10px var(--neon-primary);
+  }
+
+  /* Fullscreen keeps the custom chrome, stretching the media to fill. */
+  .player-shell:fullscreen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-void);
+  }
+
+  .player-shell:fullscreen .player-frame {
+    width: 100%;
+    height: 100%;
+  }
+
+  .player-shell:fullscreen .player-media {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    min-height: 0;
+  }
+
+  .player-shell:fullscreen .player-media video {
+    object-fit: contain;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Motion keyframes
+ * ------------------------------------------------------------------ */
+@keyframes hud-sweep {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes hud-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  80%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes hud-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 0.72;
+  }
+  96% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
