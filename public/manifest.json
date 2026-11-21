@@ -1,0 +1,77 @@
+{
+  "name": "NEXUS STREAM // Cyber-HUD Video Platform",
+  "short_name": "NEXUS",
+  "description": "Tactical neon video streaming HUD — emotional timelines, chrono-pure feeds and a reactive design system.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#07080D",
+  "theme_color": "#00F0FF",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["entertainment", "video", "multimedia"],
+  "icons": [
+    {
+      "src": "/icons/nexus-icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/nexus-icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/nexus-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Home Matrix",
+      "short_name": "Home",
+      "description": "Jump straight into the ranked Home matrix.",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/icons/nexus-icon-192.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Hyper-Feed Dimension",
+      "short_name": "Dimension",
+      "description": "Enter the vertical hyper-feed dimension.",
+      "url": "/dimension",
+      "icons": [
+        {
+          "src": "/icons/nexus-icon-192.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Creator Studio",
+      "short_name": "Studio",
+      "description": "Open the creator telemetry studio.",
+      "url": "/studio",
+      "icons": [
+        {
+          "src": "/icons/nexus-icon-192.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

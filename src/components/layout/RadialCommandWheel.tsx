@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { triggerHaptic } from "@/lib/haptics";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useQueueStore } from "@/stores/useQueueStore";
@@ -41,6 +42,7 @@ const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
  * click, scroll or resize.
  */
 export function RadialCommandWheel() {
+  const { t } = useI18n();
   const [anchor, setAnchor] = useState<WheelAnchor | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -221,7 +223,7 @@ export function RadialCommandWheel() {
   const actions: readonly WheelAction[] = [
     {
       id: "play-next",
-      label: "Play next",
+      label: t.wheel.playNext,
       icon: SkipForward,
       angleDeg: -45,
       isActive: false,
@@ -229,7 +231,7 @@ export function RadialCommandWheel() {
     },
     {
       id: "share",
-      label: "Share",
+      label: t.wheel.share,
       icon: Share2,
       angleDeg: 45,
       isActive: false,
@@ -239,7 +241,7 @@ export function RadialCommandWheel() {
     },
     {
       id: "pip",
-      label: "PiP",
+      label: t.wheel.pip,
       icon: PictureInPicture2,
       angleDeg: 135,
       isActive: isPipMode,
@@ -247,7 +249,7 @@ export function RadialCommandWheel() {
     },
     {
       id: "audio-deck",
-      label: "Audio deck",
+      label: t.wheel.audioDeck,
       icon: AudioLines,
       angleDeg: 225,
       isActive: audioDeckMode,
@@ -274,7 +276,7 @@ export function RadialCommandWheel() {
         >
           <button
             type="button"
-            aria-label="Close command wheel"
+            aria-label={t.wheel.close}
             onClick={() => closeWheel()}
             className="pointer-events-auto absolute inset-0 cursor-default bg-[var(--bg-void)]/35 backdrop-blur-[2px]"
             tabIndex={-1}
@@ -284,7 +286,7 @@ export function RadialCommandWheel() {
             ref={containerRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Radial command wheel"
+            aria-label={t.wheel.dialogAria}
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.92, opacity: 0 }}
@@ -306,7 +308,7 @@ export function RadialCommandWheel() {
               onClick={() => closeWheel()}
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.92 }}
-              aria-label="Close command wheel"
+              aria-label={t.wheel.close}
               className="absolute left-0 top-0 -ml-[18px] -mt-[18px] grid size-9 place-items-center rounded-full border border-[var(--neon-primary)]/45 bg-[var(--bg-void)] text-[var(--neon-primary)] shadow-[0_0_26px_-6px_var(--neon-primary)]"
             >
               <motion.span
@@ -323,7 +325,7 @@ export function RadialCommandWheel() {
             </motion.button>
 
             <span className="absolute left-0 top-0 -ml-[60px] mt-[150px] w-[120px] text-center font-mono text-[8px] uppercase tracking-[0.24em] text-white/25">
-              Command wheel
+              {t.wheel.caption}
             </span>
 
             {actions.map((action, index) => {

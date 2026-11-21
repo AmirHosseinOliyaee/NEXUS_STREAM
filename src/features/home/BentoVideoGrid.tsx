@@ -5,6 +5,7 @@ import { Crosshair } from "lucide-react";
 import Link from "next/link";
 
 import { VideoCard } from "@/components/ui/VideoCard";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { VideoEntity } from "@/types/schema";
 
@@ -17,6 +18,8 @@ export interface BentoVideoGridProps {
  * every re-rank animates through shared layout physics.
  */
 export function BentoVideoGrid({ videos }: BentoVideoGridProps) {
+  const { t } = useI18n();
+
   if (videos.length === 0) {
     return <EmptyMatrix />;
   }
@@ -24,7 +27,7 @@ export function BentoVideoGrid({ videos }: BentoVideoGridProps) {
   return (
     <motion.section
       layout
-      aria-label="Ranked video matrix"
+      aria-label={t.home.matrixAria}
       className="grid grid-cols-1 gap-4 md:auto-rows-[320px] md:grid-cols-2 lg:grid-cols-3"
     >
       <AnimatePresence mode="popLayout" initial={false}>

@@ -9,9 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import {
   AudioLines,
   Crosshair,
+  MessageSquare,
+  Scissors,
   Maximize,
   Minimize,
   Pause,
@@ -24,8 +27,14 @@ import {
 
 import { HudBadge } from "@/components/ui/HudBadge";
 import { AudioDeckMode } from "@/features/player/AudioDeckMode";
+import { HoloCommentsOverlay } from "@/features/comments/HoloCommentsOverlay";
+import { AiNeuralScrubbing } from "@/features/player/AiNeuralScrubbing";
 import { EmotionalPulseTimeline } from "@/features/player/EmotionalPulseTimeline";
+import { GlitchClipperModal } from "@/features/player/GlitchClipperModal";
+import { useMediaSession } from "@/features/player/useMediaSession";
+import { apiClient } from "@/services/api-client";
 import { triggerHaptic } from "@/lib/haptics";
+import { useI18n } from "@/lib/i18n";
 import { cn, formatDuration } from "@/lib/utils";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import type { CssVariables } from "@/types/css";
@@ -94,6 +103,8 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
   const setCurrentTimeStore = usePlayerStore((state) => state.setCurrentTime);
   const setDurationStore = usePlayerStore((state) => state.setDuration);
   const toggleAudioDeck = usePlayerStore((state) => state.toggleAudioDeck);
+  const seekRequestSec = usePlayerStore((state) => state.seekRequestSec);
+  const clearSeekRequest = usePlayerStore((state) => state.clearSeekRequest);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(video.durationSec);
@@ -103,6 +114,17 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
   const [useLocalFeed, setUseLocalFeed] = useState(false);
   const [hasFrame, setHasFrame] = useState(false);
   const [hasMediaError, setHasMediaError] = useState(false);
+  const [matchedTimestamps, setMatchedTimestamps] = useState<number[]>([]);
+  const [holoCommentsEnabled, setHoloCommentsEnabled] = useState(true);
+  const [clipperOpen, setClipperOpen] = useState(false);
+
+  const { t } = useI18n();
+
+  const { data: holoComments = [] } = useQuery({
+    queryKey: ["holo-comments", video.id],
+    queryFn: () => apiClient.getHoloComments(video.id),
+    staleTime: 60_000,
+  });
 
   const videoSource = useLocalFeed ? LOCAL_MOCK_FEED : video.videoUrl;
 
@@ -134,6 +156,8 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
     setUseLocalFeed(false);
     setHasFrame(false);
     setHasMediaError(false);
+    setMatchedTimestamps([]);
+    setClipperOpen(false);
   }, [
     video.id,
     video.durationSec,
@@ -200,6 +224,13 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
   );
 
   useEffect(() => {
+    const element = videoRef.current;
+    if (seekRequestSec === null || !element || element.readyState < 1) return;
+    handleSeek(seekRequestSec, true);
+    clearSeekRequest();
+  }, [seekRequestSec, clearSeekRequest, handleSeek]);
+
+  useEffect(() => {
     if (!sponsorShield) {
       lastSkippedRef.current = null;
       return;
@@ -234,6 +265,24 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
     return () => window.clearTimeout(timeout);
   }, [sponsorNotice]);
 
+  const openClipper = useCallback((): void => {
+    setIsPlaying(false);
+    setClipperOpen(true);
+    triggerHaptic("pulse");
+  }, [setIsPlaying]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key.toLowerCase() !== "c" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+      event.preventDefault();
+      openClipper();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [openClipper]);
+
   const handleTogglePlay = useCallback((): void => {
     triggerHaptic("tick");
     const element = videoRef.current;
@@ -242,6 +291,41 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
     }
     setIsPlaying(!isPlaying);
   }, [handleSeek, isPlaying, setIsPlaying]);
+
+  const mediaSessionSource = useMemo(
+    () => ({
+      id: video.id,
+      title: video.title,
+      channelName: video.channel.name,
+      thumbnailUrl: video.thumbnailUrl,
+      durationSec: duration > 0 ? duration : video.durationSec,
+    }),
+    [video.id, video.title, video.channel.name, video.thumbnailUrl, video.durationSec, duration],
+  );
+
+  const handleMediaPlay = useCallback((): void => {
+    setIsPlaying(true);
+  }, [setIsPlaying]);
+
+  const handleMediaPause = useCallback((): void => {
+    setIsPlaying(false);
+  }, [setIsPlaying]);
+
+  const handleMediaSeek = useCallback(
+    (targetSec: number): void => {
+      handleSeek(targetSec, true);
+    },
+    [handleSeek],
+  );
+
+  // Mirrors playback into the OS lock-screen / hardware media UI.
+  useMediaSession(mediaSessionSource, {
+    currentTime,
+    isPlaying,
+    onPlay: handleMediaPlay,
+    onPause: handleMediaPause,
+    onSeek: handleMediaSeek,
+  });
 
   const handleToggleMute = (): void => {
     triggerHaptic("tick");
@@ -286,6 +370,10 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
     setDuration(mediaDuration);
     setDurationStore(mediaDuration);
     element.volume = volume;
+    if (seekRequestSec !== null) {
+      handleSeek(seekRequestSec, true);
+      clearSeekRequest();
+    }
   };
 
   const handleTimeUpdate = (): void => {
@@ -384,16 +472,16 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
             <div className="absolute inset-0 bg-[var(--bg-void)]/35" />
             <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
               <HudBadge tone="neutral" variant="ghost" size="sm">
-                Signal standby
+                {t.player.signalStandby}
               </HudBadge>
               {useLocalFeed ? (
                 <HudBadge tone="primary" variant="ghost" size="sm">
-                  Local feed
+                  {t.player.localFeed}
                 </HudBadge>
               ) : null}
               {hasMediaError ? (
                 <HudBadge tone="danger" variant="ghost" size="sm">
-                  Offline
+                  {t.player.offline}
                 </HudBadge>
               ) : null}
             </div>
@@ -401,6 +489,28 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
               <Crosshair className="size-16 text-white/[0.08]" />
             </div>
           </div>
+
+          <HoloCommentsOverlay
+            comments={holoComments}
+            currentTime={currentTime}
+            enabled={holoCommentsEnabled}
+          />
+
+          <div className="absolute right-2 top-2 z-[12] w-[min(65%,260px)] sm:right-3 sm:top-3">
+            <AiNeuralScrubbing
+              transcript={video.transcript}
+              onMatchesChange={setMatchedTimestamps}
+              onSeek={(seconds) => handleSeek(seconds, true)}
+            />
+          </div>
+
+          <GlitchClipperModal
+            open={clipperOpen}
+            currentTime={currentTime}
+            videoId={video.id}
+            transcript={video.transcript}
+            onClose={() => setClipperOpen(false)}
+          />
 
           {audioDeckMode ? (
             <AudioDeckMode
@@ -443,7 +553,7 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
                 className="pointer-events-none absolute left-3 top-3 z-30"
               >
                 <HudBadge tone="warning" variant="solid" size="sm" pulse>
-                  Sponsor bypassed
+                  {t.player.sponsorBypassed}
                 </HudBadge>
               </motion.div>
             ) : null}
@@ -456,11 +566,12 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
               onSeek={(seconds) => handleSeek(seconds, true)}
               heatmap={scaledHeatmap}
               sponsorShield={sponsorShield}
+              matchedTimestamps={matchedTimestamps}
             />
 
             <div className="cyber-glass mt-1 flex items-center gap-1.5 border border-white/[0.08] px-2 py-1.5 cyber-chamfer-sm">
               <ControlButton
-                label={isPlaying ? "Pause video" : "Play video"}
+                label={isPlaying ? t.player.pause : t.player.play}
                 onClick={handleTogglePlay}
                 active={isPlaying}
                 className="px-2.5"
@@ -473,7 +584,7 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
               </ControlButton>
 
               <ControlButton
-                label={volume === 0 ? "Unmute" : "Mute"}
+                label={volume === 0 ? t.player.unmute : t.player.mute}
                 onClick={handleToggleMute}
                 active={volume === 0}
                 pressed={volume === 0}
@@ -492,7 +603,7 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
                 step={0.01}
                 value={volume}
                 onChange={(event) => setVolume(Number(event.target.value))}
-                aria-label="Volume"
+                aria-label={t.player.volume}
                 className="volume-fader hidden md:block"
                 style={
                   {
@@ -510,9 +621,7 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
               <span className="ml-auto" />
 
               <ControlButton
-                label={
-                  sponsorShield ? "Disable sponsor shield" : "Enable sponsor shield"
-                }
+                label={sponsorShield ? t.player.shieldOn : t.player.shieldOff}
                 onClick={handleToggleShield}
                 active={sponsorShield}
                 pressed={sponsorShield}
@@ -522,21 +631,45 @@ export function CyberVideoPlayer({ video }: CyberVideoPlayerProps) {
                 ) : (
                   <ShieldOff className="size-3.5" />
                 )}
-                <span className="hidden xl:inline">Shield</span>
+                <span className="hidden xl:inline">{t.player.shieldChip}</span>
               </ControlButton>
 
               <ControlButton
-                label="Toggle audio deck"
+                label={t.player.audioDeck}
                 onClick={handleToggleAudioDeck}
                 active={audioDeckMode}
                 pressed={audioDeckMode}
               >
                 <AudioLines className="size-3.5" />
-                <span className="hidden xl:inline">Audio</span>
+                <span className="hidden xl:inline">{t.player.audioChip}</span>
               </ControlButton>
 
               <ControlButton
-                label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                label={
+                  holoCommentsEnabled ? t.player.holoHide : t.player.holoShow
+                }
+                onClick={() => { triggerHaptic("tick"); setHoloCommentsEnabled((enabled) => !enabled); }}
+                active={holoCommentsEnabled}
+                pressed={holoCommentsEnabled}
+              >
+                <MessageSquare className="size-3.5" />
+                <span className="hidden xl:inline">{t.player.holoChip}</span>
+              </ControlButton>
+
+              <ControlButton
+                label={t.player.clip}
+                onClick={openClipper}
+              >
+                <Scissors className="size-3.5" />
+                <span className="hidden xl:inline">{t.player.clipChip}</span>
+              </ControlButton>
+
+              <ControlButton
+                label={
+                  isFullscreen
+                    ? t.player.fullscreenExit
+                    : t.player.fullscreenEnter
+                }
                 onClick={handleToggleFullscreen}
                 active={isFullscreen}
                 pressed={isFullscreen}

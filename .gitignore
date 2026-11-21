@@ -10,6 +10,8 @@ next-env.d.ts
 
 # production
 /build
+/playwright-report/
+/test-results/
 
 # local tooling caches (sandbox-safe)
 /.cache/

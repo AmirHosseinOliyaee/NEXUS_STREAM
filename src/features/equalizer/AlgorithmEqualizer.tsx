@@ -8,6 +8,7 @@ import { CyberCard } from "@/components/ui/CyberCard";
 import { HudSlider } from "@/components/ui/HudSlider";
 import { NeonButton } from "@/components/ui/NeonButton";
 import { triggerHaptic } from "@/lib/haptics";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
   useAppStore,
@@ -16,28 +17,28 @@ import {
 
 interface FaderSpec {
   readonly key: EqualizerWeightKey;
-  readonly label: string;
-  readonly hint: string;
+  readonly labelKey: "noveltyLabel" | "depthLabel" | "hypeLabel";
+  readonly hintKey: "noveltyHint" | "depthHint" | "hypeHint";
   readonly accent: string;
 }
 
 const FADERS: readonly FaderSpec[] = [
   {
     key: "novelty",
-    label: "Familiar / Uncharted",
-    hint: "Novelty bias",
+    labelKey: "noveltyLabel",
+    hintKey: "noveltyHint",
     accent: "var(--neon-primary)",
   },
   {
     key: "depth",
-    label: "Deep / Quick",
-    hint: "Complexity bias",
+    labelKey: "depthLabel",
+    hintKey: "depthHint",
     accent: "var(--neon-secondary)",
   },
   {
     key: "hype",
-    label: "Chill / Hype",
-    hint: "Energy bias",
+    labelKey: "hypeLabel",
+    hintKey: "hypeHint",
     accent: "var(--neon-warning)",
   },
 ];
@@ -52,6 +53,7 @@ export function AlgorithmEqualizer() {
   const weights = useAppStore((state) => state.equalizerWeights);
   const setEqualizerWeight = useAppStore((state) => state.setEqualizerWeight);
   const toggleChronoPure = useAppStore((state) => state.toggleChronoPure);
+  const { t } = useI18n();
 
   const [isDeckOpen, setDeckOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -91,10 +93,10 @@ export function AlgorithmEqualizer() {
           </span>
           <div>
             <h2 className="font-display text-[11px] font-semibold uppercase tracking-[0.28em] text-white/85">
-              Algorithm equalizer
+              {t.equalizer.title}
             </h2>
             <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.16em] text-white/30">
-              Novelty · depth · hype
+              {t.equalizer.subtitle}
             </p>
           </div>
         </div>
@@ -120,7 +122,7 @@ export function AlgorithmEqualizer() {
                   : "text-white/45 group-hover:text-white/70",
               )}
             >
-              Chrono-pure
+              {t.equalizer.chronoPure}
             </span>
             <span
               className={cn(
@@ -150,7 +152,7 @@ export function AlgorithmEqualizer() {
             haptic={false}
             onClick={handleNukeReset}
           >
-            Nuke reset
+            {t.equalizer.nukeReset}
           </NeonButton>
         </div>
       </div>
@@ -167,7 +169,7 @@ export function AlgorithmEqualizer() {
       >
         <SlidersHorizontal className="size-3.5 text-[var(--neon-primary)]" />
         <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-white/40">
-          Axis mix
+          {t.equalizer.axisMix}
         </span>
         <span className="ml-auto font-mono text-[9px] tabular-nums text-white/55">
           {weights.novelty} / {weights.depth} / {weights.hype}
@@ -191,8 +193,8 @@ export function AlgorithmEqualizer() {
         {FADERS.map((fader) => (
           <HudSlider
             key={fader.key}
-            label={fader.label}
-            hint={fader.hint}
+            label={t.equalizer[fader.labelKey]}
+            hint={t.equalizer[fader.hintKey]}
             accent={fader.accent}
             value={weights[fader.key]}
             disabled={isChronoPure}
@@ -203,14 +205,14 @@ export function AlgorithmEqualizer() {
 
         {isChronoPure ? (
           <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--neon-primary)]/70 md:col-span-3">
-            Ranking bypassed — strict chronological feed
+            {t.equalizer.bypassNotice}
           </p>
         ) : null}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.07] px-4 py-2.5 sm:px-5">
         <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-white/25">
-          3 axes / realtime re-rank
+          {t.equalizer.footerAxes}
         </span>
         <span
           className={cn(
@@ -224,7 +226,9 @@ export function AlgorithmEqualizer() {
               isChronoPure ? "bg-[var(--neon-primary)]" : "bg-white/25",
             )}
           />
-          {isChronoPure ? "Chrono-pure engaged" : "Ranking engine online"}
+          {isChronoPure
+            ? t.equalizer.footerEngaged
+            : t.equalizer.footerOnline}
         </span>
       </div>
     </CyberCard>

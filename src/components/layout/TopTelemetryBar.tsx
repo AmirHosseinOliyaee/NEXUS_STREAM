@@ -12,17 +12,23 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Command,
   CornerDownLeft,
+  DownloadCloud,
   Hexagon,
+  Languages,
   Orbit,
   Search,
+  ShieldCheck,
+  UploadCloud,
   Wifi,
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { HudBadge, type HudTone } from "@/components/ui/HudBadge";
 import { triggerHaptic } from "@/lib/haptics";
+import { LOCALE_LABELS, SUPPORTED_LOCALES, useI18n } from "@/lib/i18n";
+import { useServiceWorker } from "@/hooks/useServiceWorker";
 import { cn, formatDuration } from "@/lib/utils";
 import { apiClient } from "@/services/api-client";
 import type { VideoEntity, VideoFormat } from "@/types/schema";
@@ -42,7 +48,14 @@ export function TopTelemetryBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const wasSearchOpen = useRef(false);
+  const pathname = usePathname();
   const router = useRouter();
+  const { locale, t, setLocale } = useI18n();
+  const { status: pwaStatus, canInstall, promptInstall } = useServiceWorker();
+
+  useEffect(() => {
+    setDimensionShifted(pathname === "/dimension");
+  }, [pathname]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["neural-search", "catalog"],
@@ -154,7 +167,8 @@ export function TopTelemetryBar() {
 
   const toggleDimension = (): void => {
     triggerHaptic("tick");
-    setDimensionShifted((shifted) => !shifted);
+    setDimensionShifted(true);
+    router.push("/dimension");
   };
 
   const trapDialogFocus = (
@@ -195,7 +209,7 @@ export function TopTelemetryBar() {
         <div className="cyber-glass mx-auto flex h-14 max-w-[1440px] items-center gap-2 border border-white/[0.08] px-2.5 cyber-chamfer-lg sm:gap-4 sm:px-4">
           <Link
             href="/"
-            aria-label="Nexus Stream home"
+            aria-label={t.topBar.brandHome}
             className="group flex shrink-0 items-center gap-2.5"
           >
             <span
@@ -227,14 +241,14 @@ export function TopTelemetryBar() {
               }}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
-              aria-label="Open neural search"
+              aria-label={t.topBar.searchOpen}
               aria-haspopup="dialog"
               aria-expanded={isSearchOpen}
               className="hidden h-9 w-full max-w-sm items-center gap-2 border border-white/[0.08] bg-black/20 px-3 transition-colors duration-200 cyber-chamfer-sm hover:border-[var(--neon-primary)]/40 hover:bg-[var(--neon-primary)]/[0.05] sm:flex"
             >
               <Search className="size-3.5 shrink-0 text-white/35" />
               <span className="hidden truncate font-mono text-[10px] uppercase tracking-[0.18em] text-white/35 md:inline">
-                Neural search
+                {t.topBar.searchPlaceholder}
               </span>
               <span className="ml-auto flex shrink-0 items-center gap-1 border border-white/10 bg-white/[0.04] px-1.5 py-1 font-mono text-[8px] text-white/40">
                 <Command className="size-2.5" />K
@@ -247,7 +261,7 @@ export function TopTelemetryBar() {
                 triggerHaptic("tick");
                 setSearchOpen(true);
               }}
-              aria-label="Open neural search"
+              aria-label={t.topBar.searchOpen}
               aria-haspopup="dialog"
               aria-expanded={isSearchOpen}
               className="grid size-9 place-items-center border border-white/[0.08] bg-black/20 text-white/45 cyber-chamfer-sm sm:hidden"
@@ -257,6 +271,72 @@ export function TopTelemetryBar() {
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <div
+              role="group"
+              aria-label={t.topBar.localeSwitch}
+              title={t.topBar.localeSwitchTitle}
+              className="flex h-9 shrink-0 items-center overflow-hidden border border-white/[0.09] bg-black/25 cyber-chamfer-sm"
+            >
+              <Languages
+                aria-hidden="true"
+                className="ml-1.5 size-3 shrink-0 text-white/30"
+                strokeWidth={1.6}
+              />
+              {SUPPORTED_LOCALES.map((option) => {
+                const isCurrent = option === locale;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => {
+                      if (isCurrent) return;
+                      triggerHaptic("tick");
+                      setLocale(option);
+                    }}
+                    aria-pressed={isCurrent}
+                    aria-label={`${t.topBar.localeSwitch}: ${option.toUpperCase()}`}
+                    className={cn(
+                      "h-full px-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--neon-primary)]/60 sm:px-2",
+                      isCurrent
+                        ? "bg-[var(--neon-primary)]/15 text-[var(--neon-primary)]"
+                        : "text-white/30 hover:text-white/70",
+                    )}
+                  >
+                    {LOCALE_LABELS[option]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {canInstall ? (
+              <motion.button
+                type="button"
+                onClick={() => {
+                  triggerHaptic("pulse");
+                  promptInstall();
+                }}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label={t.pwa.installTitle}
+                title={t.pwa.installTitle}
+                className="hidden h-9 items-center gap-1 border border-[var(--neon-secondary)]/40 bg-[var(--neon-secondary)]/10 px-2 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--neon-secondary)] transition-colors hover:bg-[var(--neon-secondary)]/20 cyber-chamfer-sm lg:inline-flex"
+              >
+                <DownloadCloud className="size-3" />
+                {t.pwa.install}
+              </motion.button>
+            ) : pwaStatus === "ready" ? (
+              <HudBadge
+                tone="success"
+                variant="ghost"
+                size="sm"
+                icon={<ShieldCheck />}
+                className="hidden lg:inline-flex"
+                title={t.pwa.readyTitle}
+              >
+                {t.pwa.ready}
+              </HudBadge>
+            ) : null}
+
             <HudBadge
               tone="success"
               variant="ghost"
@@ -264,7 +344,7 @@ export function TopTelemetryBar() {
               icon={<Wifi />}
               className="hidden md:inline-flex"
             >
-              Ping 12ms
+              {t.topBar.statusPing}
             </HudBadge>
             <HudBadge
               tone="danger"
@@ -273,7 +353,7 @@ export function TopTelemetryBar() {
               pulse
               className="hidden sm:inline-flex"
             >
-              Live
+              {t.topBar.statusLive}
             </HudBadge>
 
             <motion.button
@@ -281,9 +361,9 @@ export function TopTelemetryBar() {
               onClick={toggleDimension}
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.94 }}
-              aria-label="Toggle dimension shift"
+              aria-label={t.topBar.dimensionLabel}
               aria-pressed={isDimensionShifted}
-              title="Dimension shift"
+              title={t.topBar.dimensionTitle}
               className={cn(
                 "relative grid size-9 place-items-center border transition-colors duration-200 cyber-chamfer-sm",
                 isDimensionShifted
@@ -304,11 +384,20 @@ export function TopTelemetryBar() {
               ) : null}
             </motion.button>
 
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label="Open player profile"
+            <Link
+              href="/studio"
+              aria-label={t.topBar.studioLabel}
+              title={t.topBar.studioTitle}
+              onClick={() => triggerHaptic("tick")}
+              className="grid size-9 place-items-center border border-white/[0.09] bg-white/[0.02] text-white/45 transition-colors hover:border-[var(--neon-primary)]/40 hover:text-[var(--neon-primary)] cyber-chamfer-sm"
+            >
+              <UploadCloud className="size-4" />
+            </Link>
+
+            <Link
+              href="/profile/netrunner-01"
+              aria-label={t.topBar.profileLabel}
+              onClick={() => triggerHaptic("tick")}
               className="relative ml-0.5 grid size-9 place-items-center border border-white/15 cyber-chamfer-sm"
               style={{
                 background:
@@ -319,7 +408,7 @@ export function TopTelemetryBar() {
                 NYX
               </span>
               <span className="absolute -bottom-0.5 -right-0.5 size-2 rounded-full border border-[var(--bg-void)] bg-[var(--neon-success)]" />
-            </motion.button>
+            </Link>
           </div>
         </div>
       </motion.header>
@@ -336,7 +425,7 @@ export function TopTelemetryBar() {
           >
             <button
               type="button"
-              aria-label="Close neural search"
+              aria-label={t.topBar.searchClose}
               onClick={closeSearch}
               className="absolute inset-0 cursor-default bg-[var(--bg-void)]/70 backdrop-blur-md"
               tabIndex={-1}
@@ -345,7 +434,7 @@ export function TopTelemetryBar() {
             <motion.div
               role="dialog"
               aria-modal="true"
-              aria-label="Neural search"
+              aria-label={t.topBar.searchDialog}
               onKeyDown={trapDialogFocus}
               initial={{ opacity: 0, y: -12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -361,8 +450,8 @@ export function TopTelemetryBar() {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={handleInputKeyDown}
-                  placeholder="Search titles, transcripts, channels..."
-                  aria-label="Search the neural catalog"
+                  placeholder={t.topBar.searchInputPlaceholder}
+                  aria-label={t.topBar.searchInput}
                   role="combobox"
                   aria-autocomplete="list"
                   aria-expanded={results.length > 0}
@@ -377,7 +466,7 @@ export function TopTelemetryBar() {
                 <button
                   type="button"
                   onClick={closeSearch}
-                  aria-label="Close neural search"
+                  aria-label={t.topBar.searchClose}
                   className="flex items-center gap-1.5 border border-white/10 bg-white/[0.03] px-2 py-1 font-mono text-[8px] uppercase tracking-[0.16em] text-white/40 transition-colors hover:text-white/70"
                 >
                   Esc <X className="size-2.5" />
@@ -407,14 +496,14 @@ export function TopTelemetryBar() {
                 ) : results.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
                     <p className="font-display text-[10px] uppercase tracking-[0.26em] text-white/40">
-                      No signal found
+                      {t.topBar.searchEmptyTitle}
                     </p>
                     <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/20">
-                      Try a transcript phrase or channel handle
+                      {t.topBar.searchEmptyHint}
                     </p>
                   </div>
                 ) : (
-                  <ul role="listbox" aria-label="Search results">
+                  <ul role="listbox" aria-label={t.topBar.searchResults}>
                     {results.map((video, index) => {
                       const isActive = index === activeIndex;
                       return (
@@ -467,13 +556,17 @@ export function TopTelemetryBar() {
               <div className="flex items-center justify-between gap-3 border-t border-white/[0.07] px-4 py-2.5 font-mono text-[8px] uppercase tracking-[0.14em] text-white/25">
                 <span className="flex items-center gap-3">
                   <span className="flex items-center gap-1">
-                    <Command className="size-2.5" />K toggle
+                    <Command className="size-2.5" />K {t.topBar.searchHintToggle}
                   </span>
                   <span className="flex items-center gap-1">
-                    <CornerDownLeft className="size-2.5" /> play
+                    <CornerDownLeft className="size-2.5" />{" "}
+                    {t.topBar.searchHintPlay}
                   </span>
                 </span>
-                <span>{results.length.toString().padStart(2, "0")} hits</span>
+                <span>
+                  {results.length.toString().padStart(2, "0")}{" "}
+                  {t.topBar.searchHits}
+                </span>
               </div>
             </motion.div>
           </motion.div>

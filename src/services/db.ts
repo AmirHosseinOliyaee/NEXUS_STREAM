@@ -613,6 +613,70 @@ const SEED_VIDEOS: VideoEntity[] = [
   },
 ];
 
+const createShortSeed = (
+  id: string,
+  title: string,
+  description: string,
+  parentId: string,
+  parentTimestampSec: number,
+  dominantColorHex: string,
+  thumbnailUrl: string,
+  durationSec: number,
+  viewsCount: number,
+): VideoEntity => {
+  const parent = SEED_VIDEOS.find((video) => video.id === parentId);
+  if (!parent) throw new Error(`Short seed parent not found: ${parentId}`);
+
+  return {
+    ...parent,
+    id,
+    title,
+    description,
+    thumbnailUrl,
+    dominantColorHex,
+    durationSec,
+    viewsCount,
+    publishedAt: "2026-11-10T16:30:00.000Z",
+    format: "short",
+    parentLongVideoId: parent.id,
+    parentTimestampSec,
+    heatmap: [
+      { id: `${id}-mark-1`, timestampSec: 3, durationSec: 5, intensity: 62, emotion: "insight", label: "Setup" },
+      { id: `${id}-mark-2`, timestampSec: Math.floor(durationSec * 0.48), durationSec: 6, intensity: 96, emotion: "hype", label: "Peak moment" },
+      { id: `${id}-mark-3`, timestampSec: Math.floor(durationSec * 0.78), durationSec: 5, intensity: 72, emotion: "funny", label: "Aftershock" },
+    ],
+    transcript: [
+      { timeSec: 0, text: description },
+      { timeSec: Math.floor(durationSec * 0.48), text: `The moment from ${parent.title}.` },
+    ],
+  };
+};
+
+const EXTRA_SHORTS: VideoEntity[] = [
+  createShortSeed(
+    "vid-short-reactor",
+    "The Reactor Hall Goes Quiet",
+    "A sudden silence inside the Tier-IV generator room, cut from the overnight facility transmission.",
+    "vid-silent-server",
+    1180,
+    "#00FF66",
+    "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=720&h=1280&q=80",
+    32,
+    684_000,
+  ),
+  createShortSeed(
+    "vid-short-substation",
+    "One Cable, Seven Beats",
+    "A modular synth patch locks into an odd-time sequence beneath the substation lights.",
+    "vid-synthwave-patch-09",
+    480,
+    "#BC13FE",
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=720&h=1280&q=80",
+    41,
+    392_000,
+  ),
+];
+
 /* ------------------------------------------------------------------ *
  * Comment seed
  * ------------------------------------------------------------------ */
@@ -788,7 +852,7 @@ const SEED_COMMENTS: HoloCommentEntity[] = [
 const SEED_PROFILES: PlayerProfileEntity[] = [
   {
     id: "profile-nyx",
-    handle: "@nyx",
+    handle: "@netrunner-01",
     displayName: "NYX",
     titleBadge: "Signal Runner",
     level: 27,
@@ -894,9 +958,19 @@ export class NexusDatabase extends Dexie {
       profiles: "id, handle",
     });
 
+    this.version(2)
+      .stores({
+        videos: "id, category, format, publishedAt, viewsCount",
+        comments: "id, videoId, category, videoTimestampSec, upvotes",
+        profiles: "id, handle",
+      })
+      .upgrade(async (transaction) => {
+        await transaction.table("videos").bulkPut(EXTRA_SHORTS);
+      });
+
     this.on("populate", () =>
       Promise.all([
-        this.videos.bulkAdd(SEED_VIDEOS),
+        this.videos.bulkAdd([...SEED_VIDEOS, ...EXTRA_SHORTS]),
         this.comments.bulkAdd(SEED_COMMENTS),
         this.profiles.bulkAdd(SEED_PROFILES),
       ]),

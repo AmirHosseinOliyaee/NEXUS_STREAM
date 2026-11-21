@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MotionConfig } from "framer-motion";
 import { useEffect, useState, type ReactNode } from "react";
 
+import { useLocaleSync } from "@/hooks/useLocaleSync";
+import { useServiceWorker } from "@/hooks/useServiceWorker";
 import { useAppStore } from "@/stores/useAppStore";
 
 /**
@@ -25,6 +27,11 @@ export function Providers({ children }: { children: ReactNode }) {
         },
       }),
   );
+
+  // Mirrors the persisted locale onto <html lang> / <html dir>.
+  useLocaleSync();
+  // Best-effort offline shell registration; never blocks rendering.
+  useServiceWorker();
 
   useEffect(() => {
     void useAppStore.persist.rehydrate();

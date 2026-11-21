@@ -17,6 +17,8 @@ export interface PlayerState {
   seekRequestSec: number | null;
   playVideo: (id: string) => void;
   setActiveVideo: (id: string) => void;
+  /** Fully releases the player: used by the mini-player close affordance. */
+  clearActiveVideo: () => void;
   setIsPlaying: (isPlaying: boolean) => void;
   setVolume: (volume: number) => void;
   setCurrentTime: (seconds: number) => void;
@@ -53,6 +55,16 @@ export const usePlayerStore = create<PlayerState>()((set) => ({
     set({ activeVideoId: id, isPlaying: true, currentTime: 0 }),
   setActiveVideo: (id) =>
     set({ activeVideoId: id, isPlaying: false, currentTime: 0 }),
+  clearActiveVideo: () =>
+    set({
+      activeVideoId: null,
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+      isPipMode: false,
+      audioDeckMode: false,
+      seekRequestSec: null,
+    }),
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setVolume: (volume) => set({ volume: clampVolume(volume) }),
   setCurrentTime: (seconds) => set({ currentTime: clampSeconds(seconds) }),

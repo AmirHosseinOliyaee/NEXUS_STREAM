@@ -8,6 +8,7 @@ import { HudBadge } from "@/components/ui/HudBadge";
 import { NeonButton } from "@/components/ui/NeonButton";
 import { AlgorithmEqualizer } from "@/features/equalizer/AlgorithmEqualizer";
 import { BentoVideoGrid } from "@/features/home/BentoVideoGrid";
+import { useI18n } from "@/lib/i18n";
 import { apiClient } from "@/services/api-client";
 import { useAppStore } from "@/stores/useAppStore";
 import type { EqualizerWeights } from "@/types/schema";
@@ -16,6 +17,7 @@ import type { EqualizerWeights } from "@/types/schema";
 const RERANK_DEBOUNCE_MS = 240;
 
 export default function HomePage() {
+  const { t } = useI18n();
   const equalizerWeights = useAppStore((state) => state.equalizerWeights);
   const [rankedWeights, setRankedWeights] =
     useState<EqualizerWeights>(equalizerWeights);
@@ -44,10 +46,14 @@ export default function HomePage() {
 
   const videos = data ?? [];
   const signalCount = videos.length;
-  const mode = equalizerWeights.chronoPure ? "Chrono-pure" : "Adaptive mix";
-  const feedStatus = isFetching ? "Syncing" : isError ? "Sync lost" : mode;
+  const mode = equalizerWeights.chronoPure ? t.home.modeChrono : t.home.modeAdaptive;
+  const feedStatus = isFetching
+    ? t.home.statusSyncing
+    : isError
+      ? t.home.statusSyncLost
+      : mode;
   const errorMessage =
-    error instanceof Error ? error.message : "Uplink unavailable";
+    error instanceof Error ? error.message : t.home.uplinkUnavailable;
 
   return (
     <div className="relative isolate mx-auto w-full max-w-[1440px] px-4 pb-12 pt-6 sm:px-6 lg:px-8">
@@ -65,15 +71,14 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-[var(--neon-primary)]" />
             <span className="font-mono text-[9px] uppercase tracking-[0.34em] text-[var(--neon-primary)]">
-              Home matrix / Phase 04
+              {t.home.kicker}
             </span>
           </div>
           <h1 className="mt-3 font-display text-[clamp(2rem,4vw,3rem)] font-semibold uppercase leading-[0.9] tracking-[-0.02em] text-white">
-            Signal feed
+            {t.home.title}
           </h1>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/45">
-            Ranked in real time by your algorithm mix. Move a fader and the
-            matrix re-sorts.
+            {t.home.subtitle}
           </p>
         </div>
 
@@ -85,10 +90,10 @@ export default function HomePage() {
             dot
             pulse={!isError}
           >
-            {isError ? "Feed offline" : "Feed online"}
+            {isError ? t.home.feedOffline : t.home.feedOnline}
           </HudBadge>
           <HudBadge tone="neutral" variant="ghost" size="sm">
-            {signalCount.toString().padStart(2, "0")} signals
+            {t.home.signalCount.replace("NN", signalCount.toString().padStart(2, "0"))}
           </HudBadge>
           <HudBadge
             tone={isError ? "danger" : "primary"}
@@ -111,11 +116,13 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <LayoutGrid className="size-3.5 text-[var(--neon-primary)]" />
             <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-white/40">
-              Bento matrix
+              {t.home.matrixTitle}
             </span>
           </div>
           <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-white/25">
-            {isFetching ? "Re-ranking" : `${signalCount} nodes`}
+            {isFetching
+              ? t.home.matrixReranking
+              : t.home.matrixNodes.replace("NN", String(signalCount))}
           </span>
         </div>
 
@@ -138,10 +145,12 @@ export default function HomePage() {
       <footer className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-4 font-mono text-[8px] uppercase tracking-[0.16em] text-white/25">
         <span className="flex items-center gap-2">
           <span className="size-1 bg-[var(--neon-primary)]" />
-          Nexus Stream / Home matrix
+          {t.home.footerLabel}
         </span>
         <span>
-          {mode} / {signalCount} signals
+          {t.home.footerStats
+            .replace("NN", mode)
+            .replace("MM", String(signalCount))}
         </span>
       </footer>
     </div>
@@ -149,9 +158,11 @@ export default function HomePage() {
 }
 
 function FeedSkeleton() {
+  const { t } = useI18n();
+
   return (
-    <div role="status" aria-label="Loading ranked feed">
-      <span className="sr-only">Loading ranked feed</span>
+    <div role="status" aria-label={t.home.skeleton}>
+      <span className="sr-only">{t.home.skeleton}</span>
       <div
         aria-hidden="true"
         className="grid grid-cols-1 gap-4 md:auto-rows-[320px] md:grid-cols-2 lg:grid-cols-3"
@@ -191,13 +202,15 @@ function FeedError({
   message: string;
   onRetry: () => void;
 }) {
+  const { t } = useI18n();
+
   return (
     <div className="cyber-glass flex flex-col items-center gap-3 border border-[var(--neon-danger)]/25 px-6 py-14 text-center cyber-chamfer-lg">
       <span className="grid size-11 place-items-center border border-[var(--neon-danger)]/40 bg-[var(--neon-danger)]/10 cyber-chamfer-sm">
         <TriangleAlert className="size-5 text-[var(--neon-danger)]" />
       </span>
       <p className="font-display text-[11px] uppercase tracking-[0.24em] text-white/65">
-        Feed sync failed
+        {t.home.errorTitle}
       </p>
       <p className="max-w-sm font-mono text-[9px] leading-relaxed text-white/35">
         {message}
@@ -208,7 +221,7 @@ function FeedError({
         leftIcon={<RefreshCw />}
         onClick={onRetry}
       >
-        Retry uplink
+        {t.home.retry}
       </NeonButton>
     </div>
   );

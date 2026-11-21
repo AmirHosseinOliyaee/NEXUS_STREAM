@@ -14,6 +14,7 @@ import {
 
 import { HudBadge } from "@/components/ui/HudBadge";
 import { triggerHaptic } from "@/lib/haptics";
+import { useI18n } from "@/lib/i18n";
 import { cn, formatDuration } from "@/lib/utils";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useQueueStore } from "@/stores/useQueueStore";
@@ -24,6 +25,7 @@ import type { VideoEntity } from "@/types/schema";
  * closes when the queue empties, and animates removals with layout physics.
  */
 export function CartridgeQueueDrawer() {
+  const { t } = useI18n();
   const [isOpen, setOpen] = useState(false);
   const router = useRouter();
 
@@ -63,7 +65,7 @@ export function CartridgeQueueDrawer() {
           <motion.section
             key="cartridge-queue"
             id="cartridge-queue-panel"
-            aria-label="Cartridge queue"
+            aria-label={t.queue.panelAria}
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
@@ -74,7 +76,7 @@ export function CartridgeQueueDrawer() {
               <div className="flex items-center gap-2">
                 <ListMusic className="size-3.5 text-[var(--neon-primary)]" />
                 <p className="font-display text-[10px] font-semibold uppercase tracking-[0.26em] text-white/80">
-                  Cartridge queue
+                  {t.queue.title}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -88,7 +90,7 @@ export function CartridgeQueueDrawer() {
                       triggerHaptic("heavy");
                       clearQueue();
                     }}
-                    aria-label="Clear queue"
+                    aria-label={t.queue.clear}
                     className="grid size-6 place-items-center border border-white/[0.08] text-white/30 transition-colors hover:border-[var(--neon-danger)]/50 hover:text-[var(--neon-danger)]"
                   >
                     <Trash2 className="size-3" />
@@ -103,10 +105,10 @@ export function CartridgeQueueDrawer() {
                   <ListMusic className="size-4 text-white/25" />
                 </span>
                 <p className="font-display text-[10px] uppercase tracking-[0.24em] text-white/50">
-                  No cartridges loaded
+                  {t.queue.empty}
                 </p>
                 <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-white/25">
-                  Right-click the HUD for commands
+                  {t.queue.hint}
                 </p>
               </div>
             ) : (
@@ -166,7 +168,7 @@ export function CartridgeQueueDrawer() {
                                 </span>
                                 {isCurrent ? (
                                   <span className="shrink-0 text-[var(--neon-primary)]">
-                                    On deck
+                                    {t.queue.onDeck}
                                   </span>
                                 ) : null}
                                 <span className="ml-auto shrink-0 tabular-nums text-white/45">
@@ -182,7 +184,7 @@ export function CartridgeQueueDrawer() {
                               triggerHaptic("tick");
                               removeFromQueue(video.id);
                             }}
-                            aria-label={`Remove ${video.title} from queue`}
+                            aria-label={t.queue.removeAria.replace("NN", video.title)}
                             className="grid size-6 shrink-0 place-items-center text-white/25 transition-colors hover:text-[var(--neon-danger)]"
                           >
                             <X className="size-3" />
@@ -197,10 +199,13 @@ export function CartridgeQueueDrawer() {
 
             <div className="flex items-center justify-between gap-3 border-t border-white/[0.07] px-4 py-2.5">
               <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-white/25">
-                Slot {String(currentIndex + 1).padStart(2, "0")}
+                {t.queue.slot.replace(
+                  "NN",
+                  String(currentIndex + 1).padStart(2, "0"),
+                )}
               </span>
               <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-white/25">
-                Cartridge bay
+                {t.queue.bay}
               </span>
             </div>
           </motion.section>
@@ -217,12 +222,12 @@ export function CartridgeQueueDrawer() {
         whileTap={{ scale: 0.97 }}
         aria-expanded={isOpen}
         aria-controls="cartridge-queue-panel"
-        aria-label={`Toggle cartridge queue, ${queue.length} items`}
+        aria-label={t.queue.toggleAria.replace("NN", String(queue.length))}
         className="cyber-glass flex h-10 items-center gap-2.5 border border-white/[0.09] px-3 cyber-chamfer-sm"
       >
         <Layers className="size-3.5 text-[var(--neon-primary)]" />
         <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/45">
-          Queue
+          {t.queue.trigger}
         </span>
         <span className="font-mono text-[10px] tabular-nums text-[var(--neon-primary)]">
           {String(queue.length).padStart(2, "0")}

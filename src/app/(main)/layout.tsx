@@ -4,6 +4,7 @@ import { CartridgeQueueDrawer } from "@/components/layout/CartridgeQueueDrawer";
 import { CyberOrbDock } from "@/components/layout/CyberOrbDock";
 import { RadialCommandWheel } from "@/components/layout/RadialCommandWheel";
 import { TopTelemetryBar } from "@/components/layout/TopTelemetryBar";
+import { MagneticMiniPlayer } from "@/features/player/MagneticMiniPlayer";
 
 export default function MainLayout({
   children,
@@ -22,6 +23,7 @@ export default function MainLayout({
       />
 
       <CyberOrbDock />
+      <MagneticMiniPlayer />
       <RadialCommandWheel />
       <CartridgeQueueDrawer />
     </div>

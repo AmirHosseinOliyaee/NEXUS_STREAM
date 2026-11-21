@@ -1,31 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Compass,
   Home,
-  Library,
+  UserRound,
   Zap,
   type LucideIcon,
 } from "lucide-react";
 
 import { triggerHaptic } from "@/lib/haptics";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-type DockSlotId = "home" | "discover" | "library" | "hyper";
+type DockSlotId = "home" | "dimension" | "lounge" | "profile";
 
 interface DockSlot {
   readonly id: DockSlotId;
-  readonly label: string;
   readonly icon: LucideIcon;
+  readonly href: string;
 }
 
 const SLOTS: readonly DockSlot[] = [
-  { id: "home", label: "Home", icon: Home },
-  { id: "discover", label: "Discover", icon: Compass },
-  { id: "library", label: "Library", icon: Library },
-  { id: "hyper", label: "Hyper", icon: Zap },
+  { id: "home", icon: Home, href: "/" },
+  { id: "dimension", icon: Compass, href: "/dimension" },
+  { id: "lounge", icon: Zap, href: "/lounge/nexus-alpha" },
+  { id: "profile", icon: UserRound, href: "/profile/netrunner-01" },
 ];
 
 /**
@@ -35,10 +37,20 @@ const SLOTS: readonly DockSlot[] = [
  */
 export function CyberOrbDock() {
   const [activeId, setActiveId] = useState<DockSlotId>("home");
+  const pathname = usePathname();
+  const router = useRouter();
+  const { t } = useI18n();
+
+  useEffect(() => {
+    if (pathname === "/dimension") setActiveId("dimension");
+    else if (pathname.startsWith("/lounge")) setActiveId("lounge");
+    else if (pathname.startsWith("/profile")) setActiveId("profile");
+    else setActiveId("home");
+  }, [pathname]);
 
   return (
     <motion.nav
-      aria-label="Primary navigation"
+      aria-label={t.dock.navigation}
       initial={{ y: 90, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -54,6 +66,7 @@ export function CyberOrbDock() {
         {SLOTS.map((slot) => {
           const isActive = slot.id === activeId;
           const Icon = slot.icon;
+          const label = t.dock[slot.id];
 
           return (
             <motion.button
@@ -62,11 +75,12 @@ export function CyberOrbDock() {
               onClick={() => {
                 triggerHaptic("tick");
                 setActiveId(slot.id);
+                router.push(slot.href);
               }}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.94 }}
               aria-pressed={isActive}
-              aria-label={`${slot.label}${isActive ? ", active" : ""}`}
+              aria-label={`${label}${isActive ? t.dock.activeSuffix : ""}`}
               className={cn(
                 "group relative flex h-14 w-[62px] flex-col items-center justify-center gap-1.5 cyber-chamfer-sm transition-colors duration-200 sm:w-[70px]",
                 isActive
@@ -113,7 +127,7 @@ export function CyberOrbDock() {
                   isActive ? "text-[var(--neon-primary)]" : "text-white/35",
                 )}
               >
-                {slot.label}
+                {label}
               </span>
             </motion.button>
           );

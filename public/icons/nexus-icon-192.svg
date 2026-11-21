@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192" role="img" aria-label="NEXUS STREAM">
+  <defs>
+    <linearGradient id="nx-core" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00F0FF" />
+      <stop offset="55%" stop-color="#00F0FF" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#BC13FE" />
+    </linearGradient>
+    <linearGradient id="nx-rail" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#BC13FE" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#00F0FF" stop-opacity="0.9" />
+    </linearGradient>
+    <radialGradient id="nx-glow" cx="50%" cy="46%" r="52%">
+      <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.55" />
+      <stop offset="60%" stop-color="#00F0FF" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#07080D" stop-opacity="0" />
+    </radialGradient>
+    <clipPath id="nx-frame">
+      <path d="M96 6 L177 47 V145 L96 186 L15 145 V47 Z" />
+    </clipPath>
+  </defs>
+
+  <rect width="192" height="192" fill="#07080D" />
+  <rect width="192" height="192" fill="url(#nx-glow)" clip-path="url(#nx-frame)" />
+
+  <g clip-path="url(#nx-frame)" opacity="0.5">
+    <g stroke="#00F0FF" stroke-opacity="0.16" stroke-width="1">
+      <path d="M0 24 H192 M0 48 H192 M0 72 H192 M0 96 H192 M0 120 H192 M0 144 H192 M0 168 H192" />
+      <path d="M24 0 V192 M48 0 V192 M72 0 V192 M96 0 V192 M120 0 V192 M144 0 V192 M168 0 V192" />
+    </g>
+  </g>
+
+  <path d="M96 6 L177 47 V145 L96 186 L15 145 V47 Z" fill="none" stroke="url(#nx-core)" stroke-width="5" />
+  <path d="M96 20 L165 55 V137 L96 172 L27 137 V55 Z" fill="none" stroke="#00F0FF" stroke-opacity="0.24" stroke-width="1.5" />
+
+  <path d="M115 44 L70 100 H92 L80 148 L129 88 H105 Z" fill="url(#nx-core)" />
+
+  <g stroke="url(#nx-rail)" stroke-width="3" stroke-linecap="square" fill="none">
+    <path d="M41 96 H56" />
+    <path d="M136 96 H151" />
+  </g>
+
+  <circle cx="96" cy="96" r="5" fill="#07080D" stroke="#00F0FF" stroke-width="2" opacity="0.9" />
+</svg>

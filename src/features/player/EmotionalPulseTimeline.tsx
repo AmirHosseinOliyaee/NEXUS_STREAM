@@ -8,6 +8,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
+import { useI18n, type Dictionary } from "@/lib/i18n";
 import { cn, formatDuration } from "@/lib/utils";
 import type { EmotionTag, TimelineMarker } from "@/types/schema";
 
@@ -21,12 +22,12 @@ const EMOTION_COLOR: Record<EmotionTag, string> = {
   sponsor: "rgba(255, 255, 255, 0.32)",
 };
 
-const EMOTION_LABEL: Record<EmotionTag, string> = {
-  hype: "Hype",
-  funny: "Funny",
-  shock: "Shock",
-  insight: "Insight",
-  sponsor: "Sponsor",
+const EMOTION_LABEL: Record<EmotionTag, keyof Dictionary["timeline"]> = {
+  hype: "hype",
+  funny: "funny",
+  shock: "shock",
+  insight: "insight",
+  sponsor: "sponsor",
 };
 
 const LEGEND: readonly EmotionTag[] = [
@@ -46,6 +47,8 @@ export interface EmotionalPulseTimelineProps {
   heatmap: TimelineMarker[];
   /** Dims sponsor sections while the shield is armed. */
   sponsorShield?: boolean;
+  /** Transcript timestamps highlighted by neural search. */
+  matchedTimestamps?: number[];
   className?: string;
 }
 
@@ -66,8 +69,10 @@ export function EmotionalPulseTimeline({
   onSeek,
   heatmap,
   sponsorShield = false,
+  matchedTimestamps = [],
   className,
 }: EmotionalPulseTimelineProps) {
+  const { t } = useI18n();
   const trackRef = useRef<HTMLDivElement>(null);
   const [isScrubbing, setScrubbing] = useState(false);
   const [hoverRatio, setHoverRatio] = useState<number | null>(null);
@@ -192,11 +197,13 @@ export function EmotionalPulseTimeline({
       <div
         ref={trackRef}
         role="slider"
-        aria-label="Video timeline"
+        aria-label={t.timeline.sliderAria}
         aria-valuemin={0}
         aria-valuemax={Math.round(safeDuration)}
         aria-valuenow={Math.round(currentTime)}
-        aria-valuetext={`${formatDuration(currentTime)} of ${formatDuration(safeDuration)}`}
+        aria-valuetext={t.timeline.valueText
+          .replace("MM", formatDuration(currentTime))
+          .replace("NN", formatDuration(safeDuration))}
         tabIndex={0}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -240,6 +247,19 @@ export function EmotionalPulseTimeline({
             );
           })}
         </div>
+
+        {matchedTimestamps.map((timestamp, index) => {
+          if (safeDuration <= 0 || timestamp < 0 || timestamp > safeDuration) return null;
+          const ratio = clamp01(timestamp / safeDuration);
+          return (
+            <span
+              key={`${timestamp}-${index}`}
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-1 z-10 w-1 -translate-x-1/2 rounded-full bg-[var(--neon-primary)]"
+              style={{ left: `${ratio * 100}%`, boxShadow: "0 0 8px var(--neon-primary), 0 0 18px color-mix(in srgb, var(--neon-primary) 65%, transparent)" }}
+            />
+          );
+        })}
 
         {sponsorBands.map((band) => (
           <span
@@ -292,7 +312,7 @@ export function EmotionalPulseTimeline({
                 className="size-1"
                 style={{ backgroundColor: EMOTION_COLOR[emotion] }}
               />
-              {EMOTION_LABEL[emotion]}
+              {t.timeline[EMOTION_LABEL[emotion]]}
             </span>
           ))}
         </div>

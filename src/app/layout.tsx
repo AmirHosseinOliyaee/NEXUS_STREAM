@@ -41,6 +41,19 @@ export const metadata: Metadata = {
     "Tactical neon video streaming HUD — emotional timelines, chrono-pure feeds and a reactive design system.",
   applicationName: "NEXUS STREAM",
   formatDetection: { telephone: false },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "NEXUS STREAM",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/nexus-icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
+      { url: "/icons/nexus-icon-512.svg", sizes: "512x512", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/icons/nexus-icon-192.svg", sizes: "192x192" }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -48,6 +61,7 @@ export const viewport: Viewport = {
   colorScheme: "dark",
   initialScale: 1,
   width: "device-width",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -56,6 +70,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      dir="ltr"
+      suppressHydrationWarning
       className={`${inter.variable} ${spaceGrotesk.variable} ${jetBrainsMono.variable}`}
     >
       <body className="min-h-dvh bg-void font-sans antialiased">
