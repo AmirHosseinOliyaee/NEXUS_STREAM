@@ -273,6 +273,7 @@ export function TopTelemetryBar() {
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <div
               role="group"
+              data-testid="locale-toggle"
               aria-label={t.topBar.localeSwitch}
               title={t.topBar.localeSwitchTitle}
               className="flex h-9 shrink-0 items-center overflow-hidden border border-white/[0.09] bg-black/25 cyber-chamfer-sm"
@@ -294,6 +295,7 @@ export function TopTelemetryBar() {
                       setLocale(option);
                     }}
                     aria-pressed={isCurrent}
+                    data-testid={`locale-toggle-${option}`}
                     aria-label={`${t.topBar.localeSwitch}: ${option.toUpperCase()}`}
                     className={cn(
                       "h-full px-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--neon-primary)]/60 sm:px-2",

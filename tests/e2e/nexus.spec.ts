@@ -39,9 +39,16 @@ test.describe("NEXUS STREAM experience", () => {
 
   test("locale selector updates document direction", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /switch interface language: fa/i }).click();
+    const persianOption = page.getByTestId("locale-toggle-fa");
+    const englishOption = page.getByTestId("locale-toggle-en");
+    await expect(englishOption).toHaveAttribute("aria-pressed", "true");
+
+    await persianOption.click();
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-    await page.getByRole("button", { name: /switch interface language: en/i }).click();
+    await expect(persianOption).toHaveAttribute("aria-pressed", "true");
+
+    await englishOption.click();
     await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+    await expect(englishOption).toHaveAttribute("aria-pressed", "true");
   });
 });
